@@ -1,7 +1,7 @@
 #pragma once
 
 #include "i2c_slave.h" // need this for i2c_slave_event_t (cannot forward declare it)
-#include "common/service.hh"
+#include "service.hh"
 
 namespace mylife {
   class state;

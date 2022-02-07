@@ -1,9 +1,9 @@
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 #include "i2c_fifo.h"
-#include "common/service.hh"
-#include "common/application.hh"
-#include "common/logger.hh"
+#include "service.hh"
+#include "application.hh"
+#include "logger.hh"
 #include "state.hh"
 #include "com.hh"
 

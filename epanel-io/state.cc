@@ -1,7 +1,7 @@
 #include <iostream>
-#include "common/application.hh"
-#include "common/shell.hh"
-#include "common/logger.hh"
+#include "application.hh"
+#include "shell.hh"
+#include "logger.hh"
 #include "state.hh"
 
 namespace mylife {

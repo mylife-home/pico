@@ -1,8 +1,8 @@
 #include "pico/stdlib.h"
-#include "common/application.hh"
-#include "common/status_blink.hh"
-#include "common/shell.hh"
-#include "common/logger.hh"
+#include "application.hh"
+#include "status_blink.hh"
+#include "shell.hh"
+#include "logger.hh"
 #include "state.hh"
 #include "com.hh"
 
