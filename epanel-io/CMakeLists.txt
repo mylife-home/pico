@@ -2,6 +2,7 @@ add_executable(epanel-io
   state.cc
   com.cc
   main.cc
+  zc.cc
 )
 
 pico_enable_stdio_usb(epanel-io 1)
