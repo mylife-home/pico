@@ -6,6 +6,7 @@
 #include "state.hh"
 #include "com.hh"
 #include "zc.hh"
+#include "dimmer.hh"
 
 #define GPIO_ZC 13 // green
 // #define GPIO_TRIAC 14 // yellow
@@ -26,6 +27,7 @@ int main() {
   app->register_service("state", new mylife::state());
   app->register_service("com", new mylife::com(0x01));
   app->register_service("zc", new mylife::zero_crossing_detector(GPIO_ZC));
+  app->register_service("dimmer0", new mylife::trailing_edge_dimmer(GPIO_MOSFET, 0));
 
   app->setup();
 
