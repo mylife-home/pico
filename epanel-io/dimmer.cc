@@ -49,7 +49,7 @@ namespace mylife {
 
       set_gpio(true);
 
-      auto delay_us = zc->period_us() * (255 - get_state()) / 255;
+      auto delay_us = zc->period_us() * get_state() / 255;
       add_alarm_in_us(delay_us, &s_end, this, true);
     });
   }
