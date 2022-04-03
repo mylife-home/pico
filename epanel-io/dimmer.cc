@@ -35,7 +35,7 @@ namespace mylife {
   }
 
   void trailing_edge_dimmer::setup_with_zc(zero_crossing_detector *zc) {
-    zc->register_callback([&]() {
+    zc->register_callback([this, zc]() {
       auto value = get_state();
       if (value == 0) {
         set_gpio(false);

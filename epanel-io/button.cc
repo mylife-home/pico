@@ -26,7 +26,7 @@ namespace mylife {
 
       auto zc = static_cast<zero_crossing_detector *>(application::instance()->get_service("zc"));
 
-      zc->register_callback([&]() {
+      zc->register_callback([this, zc]() {
         auto period = zc->period_us();
         if (period > 0) {
           // check at half-period (should be higher level possible)
