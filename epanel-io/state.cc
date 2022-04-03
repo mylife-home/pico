@@ -76,6 +76,10 @@ namespace mylife {
   void state::set_input(uint8_t index, bool value) {
     assert(index >= 0 && index < 16);
 
+    if (get_input(index) == value) {
+      return;
+    }
+
     if (value) {
       m_inputs |= ((uint16_t)1) << index;
     } else {

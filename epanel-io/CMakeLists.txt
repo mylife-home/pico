@@ -4,6 +4,7 @@ add_executable(epanel-io
   main.cc
   zc.cc
   dimmer.cc
+  button.cc
 )
 
 pico_enable_stdio_usb(epanel-io 1)
