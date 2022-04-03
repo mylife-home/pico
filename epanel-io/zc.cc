@@ -1,4 +1,7 @@
+#include <iostream>
+#include "application.hh"
 #include "zc.hh"
+#include "shell.hh"
 
 namespace mylife {
   zero_crossing_detector *zero_crossing_detector::m_instance = nullptr;
@@ -17,6 +20,14 @@ namespace mylife {
 
     // rising_per_sec rising per second
     gpio_set_irq_enabled_with_callback(m_gpio, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &s_irq_handler);
+
+    auto *sh = static_cast<shell *>(application::instance()->get_service("shell"));
+
+    sh->register_command("zc-stats", [&](const std::vector<std::string> & args) {
+      std::cout << "ZC Stats:" << std::endl;
+      std::cout << "period: " << period_us() << " us" << std::endl;
+      std::cout << "zero duration: " << zero_duration_us() << " us" << std::endl;
+    });
   }
 
   void zero_crossing_detector::irq_handler(uint32_t events) {
