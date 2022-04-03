@@ -36,7 +36,7 @@ int main() {
   
   app->setup();
 
-  while(1) {
+  while (true) {
     app->loop();
   }
 
