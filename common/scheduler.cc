@@ -21,7 +21,7 @@ namespace mylife {
     return task;
   }
 
-  void scheduler::add_task(task_t task) {
+  void scheduler::defer(task_t task) {
     auto lock = m_cs.lock();
     m_tasks.emplace(std::move(task));
   }

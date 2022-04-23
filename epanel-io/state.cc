@@ -77,7 +77,7 @@ namespace mylife {
   void state::set_input(uint8_t index, bool value) {
     assert(index >= 0 && index < 16);
 
-    m_scheduler->add_task([this, index, value] () {
+    m_scheduler->defer([this, index, value] () {
       if (get_input(index) == value) {
         return;
       }
@@ -108,7 +108,7 @@ namespace mylife {
   void state::set_output(uint8_t index, uint8_t value) {
     assert(index >= 0 && index < 16);
 
-    m_scheduler->add_task([this, index, value] () {
+    m_scheduler->defer([this, index, value] () {
       if (get_output(index) == value) {
         return;
       }
@@ -125,7 +125,7 @@ namespace mylife {
   }
 
   void state::reset() {
-    m_scheduler->add_task([this] () {
+    m_scheduler->defer([this] () {
       for (int index=0; index<16; ++index) {
         m_outputs[index] = 0;
       }

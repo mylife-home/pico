@@ -15,7 +15,7 @@ namespace mylife {
     virtual ~scheduler() = default;
 
     virtual void loop() override;
-    void add_task(task_t task);
+    void defer(task_t task);
 
   private:
     std::optional<task_t> get_one();
