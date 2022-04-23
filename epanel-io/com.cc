@@ -181,6 +181,8 @@ namespace mylife {
 
       case reg_reset:
         m_state->reset();
+        // reset interrupt line
+        gpio_opendrain_put(intr_pin, false);
         break;
 
       case reg_outputs: {
