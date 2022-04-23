@@ -3,6 +3,7 @@
 #include "application.hh"
 #include "status_blink.hh"
 #include "shell.hh"
+#include "scheduler.hh"
 #include "logger.hh"
 #include "state.hh"
 #include "com.hh"
@@ -27,6 +28,7 @@ int main() {
 
   app->register_service("status_blink", new mylife::status_blink());
   app->register_service("shell", new mylife::shell());
+  app->register_service("scheduler", new mylife::scheduler());
   app->register_service("logger", new mylife::logger());
   app->register_service("state", new mylife::state());
   app->register_service("com", new mylife::com(0x01));

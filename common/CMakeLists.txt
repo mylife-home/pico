@@ -7,6 +7,7 @@ target_include_directories(common
 target_sources(common
     INTERFACE
     application.cc
+    scheduler.cc
     logger.cc
     status_blink.cc
     shell.cc
