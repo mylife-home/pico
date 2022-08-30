@@ -6,6 +6,7 @@
 #include "logger.hh"
 #include "state.hh"
 #include "com.hh"
+#include "internal_temp.hh"
 
 namespace mylife {
   static auto logger_name = "com";
@@ -19,6 +20,7 @@ namespace mylife {
   static constexpr uint8_t reg_reset = 2;
   static constexpr uint8_t reg_inputs = 3;
   static constexpr uint8_t reg_outputs = 4;
+  static constexpr uint8_t reg_internal_temp = 5;
 
   static constexpr uint16_t magic = 0x4242;
 
@@ -91,6 +93,7 @@ namespace mylife {
 
   void com::setup() {
     m_state = static_cast<state *>(application::instance()->get_service("state"));
+    m_temp = static_cast<internal_temp *>(application::instance()->get_service("internal_temp"));
     
     gpio_opendrain_init(intr_pin);
 
@@ -161,6 +164,10 @@ namespace mylife {
         m_transaction->set_value(m_state->get_inputs());
         // reset interrupt line
         gpio_opendrain_put(intr_pin, false);
+        break;
+
+      case reg_internal_temp:
+        m_transaction->set_value(m_temp->get_raw());
         break;
 
       case reg_reset:

@@ -5,6 +5,7 @@
 
 namespace mylife {
   class state;
+  class internal_temp;
   class transaction;
 
   class com : public service {
@@ -24,6 +25,7 @@ namespace mylife {
 
     static com *s_instance;
     state *m_state = nullptr;
+    internal_temp *m_temp = nullptr;
     uint8_t m_address;
     transaction *m_transaction = nullptr;
   };

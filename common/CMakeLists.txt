@@ -10,6 +10,7 @@ target_sources(common
     scheduler.cc
     logger.cc
     status_blink.cc
+    internal_temp.cc
     shell.cc
 )
 

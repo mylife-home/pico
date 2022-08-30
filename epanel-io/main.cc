@@ -2,6 +2,7 @@
 #include "pico/binary_info.h"
 #include "application.hh"
 #include "status_blink.hh"
+#include "internal_temp.hh"
 #include "shell.hh"
 #include "scheduler.hh"
 #include "logger.hh"
@@ -29,6 +30,7 @@ int main() {
   auto app = mylife::application::instance();
 
   app->register_service("status_blink", new mylife::status_blink());
+  app->register_service("internal_temp", new mylife::internal_temp());
   app->register_service("shell", new mylife::shell());
   app->register_service("scheduler", new mylife::scheduler());
   app->register_service("logger", new mylife::logger());
