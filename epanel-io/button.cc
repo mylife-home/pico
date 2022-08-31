@@ -7,11 +7,14 @@
 
 namespace mylife {
 
+  static constexpr uint8_t change_retries = 3;
+
   std::optional<callback_manager<void()>> button::s_callback;
 
   button::button(uint gpio, uint8_t state_index)
    : m_gpio(gpio)
-   , m_state_index(state_index) {
+   , m_state_index(state_index)
+   , m_change_retry(0) {
   }
 
   void button::setup() {
@@ -37,8 +40,21 @@ namespace mylife {
 
     // add ourself to callback
     s_callback->add([&]() {
-      auto value = !gpio_get(m_gpio); // level is reversed (like ZC detector to be high at ZC)
-      m_state->set_input(m_state_index, value);
+      auto actual_value = m_state->get_input(m_state_index);
+      auto new_value = !gpio_get(m_gpio); // level is reversed (like ZC detector to be high at ZC)
+
+      // we only change the value after "change_retries" times the same value (avoid false changes)
+      if (actual_value == new_value) {
+        m_change_retry = 0;
+        return;
+      }
+
+      ++m_change_retry;
+
+      if (m_change_retry == change_retries) {
+        m_change_retry = 0;
+        m_state->set_input(m_state_index, new_value);
+      }
     });
   }
 

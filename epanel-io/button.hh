@@ -21,6 +21,7 @@ namespace mylife {
     uint m_gpio;
     state *m_state;
     uint8_t m_state_index;
+    uint8_t m_change_retry;
 
     static std::optional<callback_manager<void()>> s_callback;
   };
