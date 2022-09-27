@@ -83,8 +83,9 @@ namespace mylife {
   static void gpio_opendrain_init(uint gpio) {
     // emulate open drain: input for value=false, output-low for value=true
     gpio_init(gpio);
-    gpio_set_dir(gpio, false);
+    gpio_disable_pulls(gpio);
     gpio_put(gpio, false);
+    gpio_set_dir(gpio, false);
   }
 
   static void gpio_opendrain_put(uint gpio, bool value) {
@@ -99,10 +100,12 @@ namespace mylife {
 
     gpio_init(sda_pin);
     gpio_set_function(sda_pin, GPIO_FUNC_I2C);
+    gpio_disable_pulls(sda_pin);
     // gpio_pull_up(sda_pin);
 
     gpio_init(scl_pin);
     gpio_set_function(scl_pin, GPIO_FUNC_I2C);
+    gpio_disable_pulls(scl_pin);
     // gpio_pull_up(scl_pin);
 
     i2c_init(i2c0, baudrate);
