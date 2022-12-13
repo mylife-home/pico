@@ -7,7 +7,7 @@
 
 namespace mylife {
 
-  static constexpr uint8_t change_retries = 3;
+  static constexpr uint8_t change_retries = 5;
 
   std::optional<callback_manager<void()>> button::s_callback;
 
