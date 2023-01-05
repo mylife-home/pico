@@ -77,8 +77,11 @@ namespace mylife {
   void state::set_input(uint8_t index, bool value) {
     assert(index >= 0 && index < 16);
 
-    m_scheduler->defer([this, index, value] () {
-      if (get_input(index) == value) {
+    {
+      auto lock = m_cs.lock();
+
+      bool old_value = (m_inputs >> index) & ((uint16_t)1);
+      if (old_value == value) {
         return;
       }
 
@@ -87,49 +90,62 @@ namespace mylife {
       } else {
         m_inputs &= ~(((uint16_t)1) << index);
       }
+    }
 
+    m_scheduler->defer([this, index, value] () {
       for (const auto &callback : m_callbacks) {
         callback();
       }
 
-      DEBUG << "set input " << static_cast<uint32_t>(index) << " = " << get_input(index);
+      DEBUG << "set input " << static_cast<uint32_t>(index) << " = " << value;
     });
   }
 
   bool state::get_input(uint8_t index) const {
     assert(index >= 0 && index < 16);
+    auto lock = m_cs.lock();
     return (m_inputs >> index) & ((uint16_t)1);
   }
 
   uint16_t state::get_inputs() const {
+    auto lock = m_cs.lock();
     return m_inputs;
   }
 
   void state::set_output(uint8_t index, uint8_t value) {
     assert(index >= 0 && index < 16);
 
-    m_scheduler->defer([this, index, value] () {
-      if (get_output(index) == value) {
+    {
+      auto lock = m_cs.lock();
+
+      if (m_outputs[index] == value) {
         return;
       }
 
       m_outputs[index] = value;
-      
-      DEBUG << "set output " << static_cast<uint32_t>(index) << " = " << static_cast<uint32_t>(get_output(index));
+    }
+
+    m_scheduler->defer([this, index, value] () {
+      DEBUG << "set output " << static_cast<uint32_t>(index) << " = " << static_cast<uint32_t>(value);
     });
   }
 
   uint8_t state::get_output(uint8_t index) const {
     assert(index >= 0 && index < 16);
+    auto lock = m_cs.lock();
     return m_outputs[index];
   }
 
   void state::reset() {
-    m_scheduler->defer([this] () {
+    {
+      auto lock = m_cs.lock();
+      
       for (int index=0; index<16; ++index) {
         m_outputs[index] = 0;
       }
+    }
 
+    m_scheduler->defer([this] () {
       DEBUG << "reset";
     });
   }
