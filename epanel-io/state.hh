@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <array>
 #include <functional>
+#include <bitset>
 #include "service.hh"
 #include "scheduler.hh"
 #include "critical_section.hh"
@@ -26,7 +27,7 @@ namespace mylife {
 
   private:
     mutable critical_section m_cs;
-    uint16_t m_inputs = 0;
+    std::bitset<16> m_inputs = {0};
     std::array<uint8_t, 16> m_outputs = {0};
     std::vector<std::function<void()>> m_callbacks;
     scheduler *m_scheduler = nullptr;

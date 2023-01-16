@@ -10,9 +10,11 @@ namespace mylife {
     explicit lock_guard(critical_section_t &cs)
      : m_cs(cs) {
       critical_section_enter_blocking(&m_cs);
+      __dmb();
     }
 
     ~lock_guard() {
+      __dmb();
       critical_section_exit(&m_cs);
     }
 

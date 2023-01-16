@@ -80,16 +80,12 @@ namespace mylife {
     {
       auto lock = m_cs.lock();
 
-      bool old_value = (m_inputs >> index) & ((uint16_t)1);
+      bool old_value = m_inputs.test(index);
       if (old_value == value) {
         return;
       }
 
-      if (value) {
-        m_inputs |= ((uint16_t)1) << index;
-      } else {
-        m_inputs &= ~(((uint16_t)1) << index);
-      }
+      m_inputs.set(index, value);
     }
 
     m_scheduler->defer([this, index, value] () {
@@ -104,12 +100,12 @@ namespace mylife {
   bool state::get_input(uint8_t index) const {
     assert(index >= 0 && index < 16);
     auto lock = m_cs.lock();
-    return (m_inputs >> index) & ((uint16_t)1);
+    return m_inputs.test(index);
   }
 
   uint16_t state::get_inputs() const {
     auto lock = m_cs.lock();
-    return m_inputs;
+    return static_cast<uint16_t>(m_inputs.to_ulong());
   }
 
   void state::set_output(uint8_t index, uint8_t value) {
