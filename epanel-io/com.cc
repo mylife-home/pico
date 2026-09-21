@@ -217,8 +217,6 @@ namespace mylife {
 
       case reg_inputs:
         tx->set_value(m_state->get_inputs());
-        // reset interrupt line
-        gpio_opendrain_put(intr_pin, false);
         break;
 
       case reg_internal_temp:
@@ -241,8 +239,14 @@ namespace mylife {
 
     switch(tx->type()) {
       case reg_check:
-      case reg_inputs:
       case reg_internal_temp:
+        break;
+
+      case reg_inputs:
+        // only acknowledge if what the master got is still current
+        if (m_state->get_inputs() == tx->get_value()) {
+          gpio_opendrain_put(intr_pin, false);
+        }
         break;
 
       case reg_reset:
