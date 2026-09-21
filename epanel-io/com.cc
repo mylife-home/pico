@@ -1,3 +1,6 @@
+#include <cassert>
+#include <cstdint>
+
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 #include "i2c_fifo.h"
@@ -60,6 +63,11 @@ namespace mylife {
       return m_type;
     }
 
+    // only a transaction that has exchanged no byte yet may survive a STOP
+    bool started() const {
+      return m_offset > 0;
+    }
+
     bool ended() const {
       return m_offset >= 2;
     }
@@ -75,10 +83,26 @@ namespace mylife {
     int m_offset = 0;
   };
 
+  // esphome does not use a repeated start: reading a register is split into
+  // "write [reg], STOP" then "read [lo][hi], STOP". So the selected register
+  // has to survive a STOP. The byte position inside the u16 must not: keeping a
+  // half received word would shift every following byte by one, forever, and
+  // nothing would ever resynchronize us.
+  //
+  // The invariant that makes this recoverable is that the first byte received
+  // after a STOP is always a register. Whatever the master did or failed to do
+  // before, the next transfer starts clean.
+  //
+  // The transaction itself carries the byte position, so "survives a STOP"
+  // means "exists and has not started yet".
+
   com::com(uint8_t address)
-   : m_address(address) {
+   : m_address(address)
+   , m_transaction(std::make_unique<std::optional<transaction>>()) {
     s_instance = this;
   }
+
+  com::~com() = default;
 
   static void gpio_opendrain_init(uint gpio) {
     // emulate open drain: input for value=false, output-low for value=true
@@ -119,18 +143,27 @@ namespace mylife {
   }
 
   void com::i2c_handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
+    auto &tx = *m_transaction;
+
     switch (event) {
       case I2C_SLAVE_RECEIVE: {
         auto data = i2c_read_byte(i2c);
 
-        if (!m_transaction) {
+        if (m_expect_reg) {
+          m_expect_reg = false;
           init_transaction(data);
-          return;
+          break;
         }
 
-        m_transaction->set_byte(data);
+        if (!tx || tx->ended()) {
+          // unknown register, or more payload than we expect: swallow it, the
+          // next STOP puts us back in a known state
+          break;
+        }
 
-        if (m_transaction->ended()) {
+        tx->set_byte(data);
+
+        if (tx->ended()) {
           finish_transaction();
         }
 
@@ -138,11 +171,17 @@ namespace mylife {
       }
 
       case I2C_SLAVE_REQUEST: {
-        assert(m_transaction);
-        auto data = m_transaction->get_byte();
+        // a read never starts a transfer, it continues the one whose register
+        // was selected by the preceding write
+        uint8_t data = 0xff;
+
+        if (tx && !tx->ended()) {
+          data = tx->get_byte();
+        }
+
         i2c_write_byte(i2c, data);
 
-        if (m_transaction->ended()) {
+        if (tx && tx->ended()) {
           finish_transaction();
         }
 
@@ -150,27 +189,40 @@ namespace mylife {
       }
 
       case I2C_SLAVE_FINISH:
-        // esphome does not handle repeated stop, so we have to handle it though multiple queries
+        // A STOP always ends a transfer, so the next byte we receive is a
+        // register again, whatever happened before. Only the register selection
+        // survives, because esphome puts a STOP between selecting a register
+        // and reading its value.
+        m_expect_reg = true;
+
+        if (tx && tx->started()) {
+          // aborted in the middle of a word: the payload is unusable, and so is
+          // the register it belonged to
+          tx.reset();
+        }
+
         break;
     }
   }
 
   void com::init_transaction(uint8_t reg) {
-    m_transaction = new transaction(reg);
+    auto &tx = *m_transaction;
+
+    tx.emplace(reg);
 
     switch(reg) {
       case reg_check:
-        m_transaction->set_value(magic);
+        tx->set_value(magic);
         break;
 
       case reg_inputs:
-        m_transaction->set_value(m_state->get_inputs());
+        tx->set_value(m_state->get_inputs());
         // reset interrupt line
         gpio_opendrain_put(intr_pin, false);
         break;
 
       case reg_internal_temp:
-        m_transaction->set_value(m_temp->get_raw());
+        tx->set_value(m_temp->get_raw());
         break;
 
       case reg_reset:
@@ -178,15 +230,19 @@ namespace mylife {
         break;
 
       default:
-        ERROR << "got unknown request" << static_cast<int>(reg);
+        tx.reset();
+        ERROR << "got unknown request " << static_cast<int>(reg);
         break;
     }
   }
 
   void com::finish_transaction() {
-    switch(m_transaction->type()) {
+    auto &tx = *m_transaction;
+
+    switch(tx->type()) {
       case reg_check:
       case reg_inputs:
+      case reg_internal_temp:
         break;
 
       case reg_reset:
@@ -196,16 +252,18 @@ namespace mylife {
         break;
 
       case reg_outputs: {
-        auto word = m_transaction->get_value();
+        auto word = tx->get_value();
         auto index = (uint8_t)(word >> 8);
         auto value = (uint8_t)(word & 0x00ff);
         m_state->set_output(index, value);
         break;
       }
+
+      default:
+        break;
     }
 
-    delete m_transaction;
-    m_transaction = nullptr;
+    tx.reset();
   }
 
   void com::inputs_changed() {

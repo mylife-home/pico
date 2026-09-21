@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+#include <optional>
 #include "i2c_slave.h" // need this for i2c_slave_event_t (cannot forward declare it)
 #include "service.hh"
 
@@ -11,7 +13,7 @@ namespace mylife {
   class com : public service {
   public:
     com(uint8_t address);
-    virtual ~com() = default;
+    virtual ~com();
 
     virtual void setup() override;
 
@@ -27,7 +29,11 @@ namespace mylife {
     state *m_state = nullptr;
     internal_temp *m_temp = nullptr;
     uint8_t m_address;
-    transaction *m_transaction = nullptr;
+
+    // allocated once at construction: the optional then holds the transaction
+    // in place, so a transfer never touches the heap
+    std::unique_ptr<std::optional<transaction>> m_transaction;
+    bool m_expect_reg = true; // next received byte is a register, not a payload
   };
 
 }
