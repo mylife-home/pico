@@ -78,7 +78,7 @@ namespace mylife {
     union {
       std::uint16_t value;
       std::uint8_t  parts[2];
-    } m_value;
+    } m_value = {0};
 
     int m_offset = 0;
   };
@@ -149,15 +149,15 @@ namespace mylife {
       case I2C_SLAVE_RECEIVE: {
         auto data = i2c_read_byte(i2c);
 
-        if (m_expect_reg) {
+        // a byte is a register if a STOP said so, or if nothing is in progress
+        if (m_expect_reg || !tx) {
           m_expect_reg = false;
           init_transaction(data);
           break;
         }
 
-        if (!tx || tx->ended()) {
-          // unknown register, or more payload than we expect: swallow it, the
-          // next STOP puts us back in a known state
+        if (tx->ended()) {
+          // more payload than we expect: swallow it
           break;
         }
 
@@ -228,7 +228,7 @@ namespace mylife {
         break;
 
       default:
-        tx.reset();
+        // kept, so the payload is drained instead of being taken for registers
         ERROR << "got unknown request " << static_cast<int>(reg);
         break;
     }
