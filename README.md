@@ -5,6 +5,9 @@ RaspberryPI Pico firmwares
 - ~workspace/pico-sdk
 - build ~/workspace/pico_i2c_slave
 
+## Build env
+- sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib
+
 ## Build
 
 - mkdir build (or rm -rf build/*)
