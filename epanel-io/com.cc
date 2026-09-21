@@ -259,6 +259,12 @@ namespace mylife {
         auto word = tx->get_value();
         auto index = (uint8_t)(word >> 8);
         auto value = (uint8_t)(word & 0x00ff);
+
+        if (index >= 16) {
+          ERROR << "got out of range output index " << static_cast<int>(index);
+          break;
+        }
+
         m_state->set_output(index, value);
         break;
       }
